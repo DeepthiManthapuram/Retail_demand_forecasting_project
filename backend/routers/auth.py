@@ -64,19 +64,35 @@ class UserProfile(BaseModel):
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+import hashlib
+import os
+
 def _hash_password(password: str) -> str:
-    """Hash a plaintext password using bcrypt, safely truncating to 72 bytes."""
-    pwd_bytes = password.encode('utf-8')[:72]
-    salt = bcrypt.gensalt()
-    return bcrypt.hashpw(pwd_bytes, salt).decode('utf-8')
+    """Hash password using bcrypt with fallback to hashlib pbkdf2_hmac."""
+    try:
+        pwd_bytes = password.encode('utf-8')[:72]
+        salt = bcrypt.gensalt()
+        return "bcrypt$" + bcrypt.hashpw(pwd_bytes, salt).decode('utf-8')
+    except Exception:
+        salt = os.urandom(16)
+        pwd_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
+        return "pbkdf2$" + salt.hex() + "$" + pwd_hash.hex()
 
 
 def _verify_password(plain: str, hashed: str) -> bool:
-    """Verify a plaintext password against its bcrypt hash."""
+    """Verify password against bcrypt or pbkdf2 hash."""
     try:
+        if hashed.startswith("pbkdf2$"):
+            parts = hashed.split("$")
+            if len(parts) == 3:
+                salt = bytes.fromhex(parts[1])
+                check_hash = hashlib.pbkdf2_hmac('sha256', plain.encode('utf-8'), salt, 100000)
+                return check_hash.hex() == parts[2]
+            return False
+        
+        raw_hash = hashed.replace("bcrypt$", "") if hashed.startswith("bcrypt$") else hashed
         pwd_bytes = plain.encode('utf-8')[:72]
-        hashed_bytes = hashed.encode('utf-8')
-        return bcrypt.checkpw(pwd_bytes, hashed_bytes)
+        return bcrypt.checkpw(pwd_bytes, raw_hash.encode('utf-8'))
     except Exception:
         return False
 

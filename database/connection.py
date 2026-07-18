@@ -80,24 +80,15 @@ def drop_all_tables() -> None:
 
 
 def get_db():
-    """Yield a database session and ensure tables + seed master data exist on serverless."""
+    """Yield a database session and ensure tables exist on serverless."""
     global _TABLES_INITIALIZED
     if not _TABLES_INITIALIZED:
         try:
-            create_all_tables()
-            from database.seed import seed_stores, seed_products
-            temp_db = SessionLocal()
-            try:
-                seed_stores(temp_db)
-                seed_products(temp_db)
-                temp_db.commit()
-            except Exception as e:
-                temp_db.rollback()
-            finally:
-                temp_db.close()
+            from database.models import Base  # noqa: PLC0415
+            Base.metadata.create_all(bind=engine)
             _TABLES_INITIALIZED = True
         except Exception as exc:
-            logger.warning("Auto-create tables warning: %s", exc)
+            logger.warning("Table initialization notice: %s", exc)
 
     db: Session = SessionLocal()
     try:
