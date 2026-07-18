@@ -65,7 +65,7 @@ export default function Home() {
 
           <div style={{ display:'flex', gap:'1rem', justifyContent:'center', flexWrap:'wrap' }}>
             <button className="btn btn-primary pulse-glow" style={{ fontSize:'1rem', padding:'0.8rem 2.5rem' }}
-              onClick={() => navigate(token ? '/forecast' : '/login')}>
+              onClick={() => navigate('/forecast')}>
               <Zap size={18} /> Start Forecast
             </button>
           </div>
