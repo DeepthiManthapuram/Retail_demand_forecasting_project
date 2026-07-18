@@ -10,3 +10,13 @@ __pycache__
 dist
 frontend/dist
 saved_models/
+api/
+backend/
+database/
+models/
+config/
+prediction/
+feature_engineering/
+training/
+utils/
+reports/
