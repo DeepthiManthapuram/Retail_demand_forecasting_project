@@ -1,18 +1,11 @@
-# ============================================================
-# requirements.txt — Lightweight ML stack for Vercel Serverless
-# ============================================================
-
-fastapi==0.111.0
-uvicorn==0.29.0
-python-multipart==0.0.9
-
-sqlalchemy==2.0.30
-
-pydantic==2.7.1
-pydantic-settings==2.2.1
-email-validator==2.1.1
-
-pandas==2.2.2
-numpy==1.26.4
-scikit-learn==1.4.2
-reportlab==4.2.0
+fastapi
+uvicorn
+python-multipart
+sqlalchemy
+pydantic
+pydantic-settings
+email-validator
+pandas
+numpy
+scikit-learn
+reportlab
