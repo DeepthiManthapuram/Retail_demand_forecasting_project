@@ -13,6 +13,10 @@
       "dest": "https://retaildemandforecastingproject-production.up.railway.app/health"
     },
     {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
