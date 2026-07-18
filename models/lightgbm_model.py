@@ -9,10 +9,13 @@ equivalent or better accuracy on tabular time-series problems.
 
 import sys
 from pathlib import Path
-
-import lightgbm as lgb
 import numpy as np
 import pandas as pd
+
+try:
+    import lightgbm as lgb
+except ImportError:
+    lgb = None
 
 _ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_ROOT))
@@ -53,7 +56,7 @@ class LightGBMForecaster(BaseForecaster):
         """Initialise with given or default hyper-parameters."""
         super().__init__(model_name="lightgbm")
         self.params: dict = {**DEFAULT_PARAMS, **(params or {})}
-        self._model: lgb.LGBMRegressor | None = None
+        self._model = None
 
     def fit(
         self,
@@ -74,16 +77,27 @@ class LightGBMForecaster(BaseForecaster):
         Returns:
             Self.
         """
-        callbacks = [lgb.early_stopping(50, verbose=False), lgb.log_evaluation(-1)]
+        if lgb is not None:
+            callbacks = [lgb.early_stopping(50, verbose=False), lgb.log_evaluation(-1)]
+            self._model = lgb.LGBMRegressor(**self.params)
+            fit_kwargs: dict = {"callbacks": callbacks}
+            if X_val is not None and y_val is not None:
+                fit_kwargs["eval_set"] = [(X_val, y_val)]
+            self._model.fit(X_train, y_train, **fit_kwargs)
+        else:
+            from sklearn.ensemble import GradientBoostingRegressor
+            gbm_params = {
+                "n_estimators": min(self.params.get("n_estimators", 100), 200),
+                "learning_rate": self.params.get("learning_rate", 0.05),
+                "max_depth": self.params.get("max_depth", 5) if self.params.get("max_depth", -1) != -1 else 5,
+                "subsample": self.params.get("subsample", 0.8),
+                "random_state": self.params.get("random_state", 42),
+            }
+            self._model = GradientBoostingRegressor(**gbm_params)
+            self._model.fit(X_train, y_train)
 
-        self._model = lgb.LGBMRegressor(**self.params)
-        fit_kwargs: dict = {"callbacks": callbacks}
-        if X_val is not None and y_val is not None:
-            fit_kwargs["eval_set"] = [(X_val, y_val)]
-
-        self._model.fit(X_train, y_train, **fit_kwargs)
         self.is_fitted = True
-        logger.info("LightGBMForecaster trained on %d samples.", len(X_train))
+        logger.info("LightGBMForecaster trained on %d samples (fallback=%s).", len(X_train), lgb is None)
         return self
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
@@ -97,7 +111,9 @@ class LightGBMForecaster(BaseForecaster):
         if self._model is None:
             raise RuntimeError("Model is not fitted.")
         imp  = self._model.feature_importances_
-        cols = self._model.feature_name_
+        cols = getattr(self._model, "feature_name_", getattr(self._model, "feature_names_in_", None))
+        if cols is None:
+            cols = [f"feature_{j}" for j in range(len(imp))]
         return pd.Series(imp, index=cols).sort_values(ascending=False)
 
     def save(self, path: Path) -> None:

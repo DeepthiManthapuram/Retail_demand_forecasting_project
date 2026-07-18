@@ -10,10 +10,13 @@ in retail demand forecasting competitions.
 
 import sys
 from pathlib import Path
-
 import numpy as np
 import pandas as pd
-import xgboost as xgb
+
+try:
+    import xgboost as xgb
+except ImportError:
+    xgb = None
 
 _ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_ROOT))
@@ -56,7 +59,7 @@ class XGBoostForecaster(BaseForecaster):
         """Initialise XGBoost model with given or default hyper-parameters."""
         super().__init__(model_name="xgboost")
         self.params: dict = {**DEFAULT_PARAMS, **(params or {})}
-        self._model: xgb.XGBRegressor | None = None
+        self._model = None
 
     def fit(
         self,
@@ -77,16 +80,27 @@ class XGBoostForecaster(BaseForecaster):
         Returns:
             Self.
         """
-        self._model = xgb.XGBRegressor(**self.params)
+        if xgb is not None:
+            self._model = xgb.XGBRegressor(**self.params)
+            fit_kwargs: dict = {}
+            if X_val is not None and y_val is not None:
+                fit_kwargs["eval_set"] = [(X_val, y_val)]
+                fit_kwargs["verbose"]  = False
+            self._model.fit(X_train, y_train, **fit_kwargs)
+        else:
+            from sklearn.ensemble import GradientBoostingRegressor
+            gbm_params = {
+                "n_estimators": min(self.params.get("n_estimators", 100), 200),
+                "learning_rate": self.params.get("learning_rate", 0.1),
+                "max_depth": self.params.get("max_depth", 5),
+                "subsample": self.params.get("subsample", 1.0),
+                "random_state": self.params.get("random_state", 42),
+            }
+            self._model = GradientBoostingRegressor(**gbm_params)
+            self._model.fit(X_train, y_train)
 
-        fit_kwargs: dict = {}
-        if X_val is not None and y_val is not None:
-            fit_kwargs["eval_set"] = [(X_val, y_val)]
-            fit_kwargs["verbose"]  = False
-
-        self._model.fit(X_train, y_train, **fit_kwargs)
         self.is_fitted = True
-        logger.info("XGBoostForecaster trained on %d samples.", len(X_train))
+        logger.info("XGBoostForecaster trained on %d samples (fallback=%s).", len(X_train), xgb is None)
         return self
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
