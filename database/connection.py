@@ -30,6 +30,19 @@ if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
     tmp_path = Path(tempfile.gettempdir()) / "retail_demand.db"
     db_url = f"sqlite:///{tmp_path}"
     logger.info("Serverless environment detected — using writeable DB at %s", tmp_path)
+    
+    # Copy pre-seeded database if it exists in project root to avoid slow startup queries
+    if not tmp_path.exists():
+        src_db = _ROOT / "retailiq.db"
+        if src_db.exists():
+            try:
+                import shutil
+                shutil.copyfile(src_db, tmp_path)
+                logger.info("✓ Pre-seeded DB copied successfully to %s", tmp_path)
+            except Exception as exc:
+                logger.warning("Failed to copy pre-seeded DB: %s", exc)
+        else:
+            logger.info("Pre-seeded DB not found at %s", src_db)
 
 
 def _get_engine_kwargs(database_url: str) -> dict:

@@ -54,20 +54,22 @@ async def lifespan(app: FastAPI):
     logger.info("  Database URL: %s", settings.database_url)
     logger.info("=" * 60)
 
-    # ---- Create DB tables ----
-    try:
-        create_all_tables()
-        logger.info("✓ Database tables ready.")
-    except Exception as exc:
-        logger.error("✗ Database setup failed: %s", exc)
+    # ---- Create DB tables & Seed (Local only to prevent serverless lifespan timeouts) ----
+    if not os.environ.get("VERCEL") and not os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+        try:
+            create_all_tables()
+            logger.info("✓ Database tables ready.")
+        except Exception as exc:
+            logger.error("✗ Database setup failed: %s", exc)
 
-    # ---- Seed master data ----
-    try:
-        from database.seed import run_seed
-        run_seed()
-        logger.info("✓ Master data seeded.")
-    except Exception as exc:
-        logger.warning("Seed step encountered an issue: %s", exc)
+        try:
+            from database.seed import run_seed
+            run_seed()
+            logger.info("✓ Master data seeded.")
+        except Exception as exc:
+            logger.warning("Seed step encountered an issue: %s", exc)
+    else:
+        logger.info("✓ Serverless lifespan — skipping DB initialization (database file copied on demand).")
 
     # ---- Generate synthetic dataset if missing (local environment only) ----
     if not os.environ.get("VERCEL") and not os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
