@@ -20,7 +20,6 @@ sys.path.insert(0, str(_ROOT))
 from backend.schemas.forecast import PredictRequest, PredictResponse, ForecastHistoryItem
 from database.connection import get_db
 from database.models import Forecast, Store, Product, PredictionLog, User
-from backend.routers.auth import get_optional_current_user
 from prediction.predictor import DemandPredictor
 from config.constants import FORECAST_HORIZONS, ALL_MODELS, MODEL_AUTO
 from config.logging_config import get_logger
@@ -34,7 +33,6 @@ _predictor = DemandPredictor()   # singleton — loads data once
 def predict(
     request: PredictRequest,
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_optional_current_user),
 ):
     """
     Generate a multi-step demand forecast for a Store × Item pair.
@@ -55,7 +53,7 @@ def predict(
     logger.info(
         "Predict request — store=%d, item=%d, horizon=%d, model=%s, user=%s",
         request.store, request.item, request.horizon, request.model,
-        current_user.username if current_user else "anonymous"
+        "anonymous"
     )
 
     try:
@@ -76,7 +74,7 @@ def predict(
     response_ms = (time.perf_counter() - t_start) * 1000
 
     # ---- Persist to DB ----
-    user_id = current_user.id if current_user else None
+    user_id = None
     forecast_id = _persist_forecast(db, request, result.to_dict(), response_ms, user_id=user_id)
 
     result_dict = result.to_dict()
@@ -147,7 +145,6 @@ def forecast_history(
     item:   Optional[int] = Query(None, ge=1, le=50),
     limit:  int = Query(50, ge=1, le=500),
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_optional_current_user),
 ):
     """
     Retrieve past forecast records for the current user, optionally filtered by store and item.
