@@ -194,9 +194,10 @@ def register(request: RegisterRequest, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(user)
 
-        token = _create_token(user.username, user.role.value)
-        logger.info("New user registered: %s (%s)", user.username, user.role)
-        return TokenResponse(access_token=token, username=user.username, role=user.role.value)
+        role_val = user.role.value if hasattr(user.role, 'value') else str(user.role)
+        token = _create_token(user.username, role_val)
+        logger.info("New user registered: %s (%s)", user.username, role_val)
+        return TokenResponse(access_token=token, username=user.username, role=role_val)
     except HTTPException:
         raise
     except Exception as exc:
@@ -220,8 +221,9 @@ def login(
         user.last_login = datetime.utcnow()
         db.commit()
 
-        token = _create_token(user.username, user.role.value)
-        return TokenResponse(access_token=token, username=user.username, role=user.role.value)
+        role_val = user.role.value if hasattr(user.role, 'value') else str(user.role)
+        token = _create_token(user.username, role_val)
+        return TokenResponse(access_token=token, username=user.username, role=role_val)
     except HTTPException:
         raise
     except Exception as exc:
