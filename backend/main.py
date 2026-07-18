@@ -54,8 +54,16 @@ async def lifespan(app: FastAPI):
     logger.info("  Database URL: %s", settings.database_url)
     logger.info("=" * 60)
 
+    is_serverless = (
+        os.environ.get("VERCEL")
+        or "AWS_LAMBDA_FUNCTION_NAME" in os.environ
+        or "LAMBDA_TASK_ROOT" in os.environ
+        or str(Path.cwd()).startswith("/var/task")
+        or str(Path(__file__)).startswith("/var/task")
+    )
+
     # ---- Create DB tables & Seed (Local only to prevent serverless lifespan timeouts) ----
-    if not os.environ.get("VERCEL") and not os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+    if not is_serverless:
         try:
             create_all_tables()
             logger.info("✓ Database tables ready.")
@@ -72,7 +80,7 @@ async def lifespan(app: FastAPI):
         logger.info("✓ Serverless lifespan — skipping DB initialization (database file copied on demand).")
 
     # ---- Generate synthetic dataset if missing (local environment only) ----
-    if not os.environ.get("VERCEL") and not os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+    if not is_serverless:
         synthetic_path = settings.datasets_dir / "synthetic_train.csv"
         kaggle_path    = settings.datasets_dir / "train.csv"
         if not synthetic_path.exists() and not kaggle_path.exists():

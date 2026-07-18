@@ -26,7 +26,14 @@ settings = get_settings()
 
 # Determine database URL — fallback to writeable /tmp/ in Vercel/Serverless
 db_url = settings.database_url
-if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+is_serverless = (
+    os.environ.get("VERCEL")
+    or "AWS_LAMBDA_FUNCTION_NAME" in os.environ
+    or "LAMBDA_TASK_ROOT" in os.environ
+    or str(Path.cwd()).startswith("/var/task")
+    or str(Path(__file__)).startswith("/var/task")
+)
+if is_serverless:
     tmp_path = Path(tempfile.gettempdir()) / "retail_demand.db"
     db_url = f"sqlite:///{tmp_path}"
     logger.info("Serverless environment detected — using writeable DB at %s", tmp_path)

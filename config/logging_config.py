@@ -33,8 +33,14 @@ def setup_logging(
     logs_dir: Path | None = None,
     log_to_file: bool = True,
 ) -> None:
-    # Disable file logging on Vercel/serverless environments
-    if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+    is_serverless = (
+        os.environ.get("VERCEL")
+        or "AWS_LAMBDA_FUNCTION_NAME" in os.environ
+        or "LAMBDA_TASK_ROOT" in os.environ
+        or str(Path.cwd()).startswith("/var/task")
+        or str(Path(__file__)).startswith("/var/task")
+    )
+    if is_serverless:
         log_to_file = False
 
     numeric_level = getattr(logging, log_level.upper(), logging.INFO)

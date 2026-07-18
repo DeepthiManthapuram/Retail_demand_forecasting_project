@@ -64,7 +64,14 @@ class Settings(BaseSettings):
 
     def ensure_dirs(self) -> None:
         """Safely ensure directories exist, redirecting to /tmp in serverless."""
-        if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+        is_serverless = (
+            os.environ.get("VERCEL")
+            or "AWS_LAMBDA_FUNCTION_NAME" in os.environ
+            or "LAMBDA_TASK_ROOT" in os.environ
+            or str(Path.cwd()).startswith("/var/task")
+            or str(Path(__file__)).startswith("/var/task")
+        )
+        if is_serverless:
             tmp = Path(tempfile.gettempdir())
             self.datasets_dir = tmp / "datasets"
             self.saved_models_dir = tmp / "saved_models"
