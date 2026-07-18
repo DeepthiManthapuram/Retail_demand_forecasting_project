@@ -1,0 +1,67 @@
+# .gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Environment
+.env
+
+# Database
+*.db
+*.sqlite3
+
+# Model artefacts
+saved_models/*.pkl
+saved_models/*.keras
+saved_models/*.h5
+
+# Logs
+logs/*.log
+logs/*.jsonl
+
+# Reports
+reports/*.csv
+reports/*.xlsx
+reports/*.pdf
+reports/*.html
+
+# Datasets (large files)
+datasets/synthetic_train.csv
+datasets/train.csv
+datasets/uploaded_train.csv
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/

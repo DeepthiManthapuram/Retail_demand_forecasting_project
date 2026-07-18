@@ -1,0 +1,29 @@
+[
+  {
+    "model": "xgboost",
+    "mae": 7.1961,
+    "rmse": 9.3139,
+    "mape": 9.0454,
+    "r2": 0.688,
+    "training_time_s": 1.4,
+    "pred_time_ms": 9.21
+  },
+  {
+    "model": "lightgbm",
+    "mae": 7.0724,
+    "rmse": 9.4686,
+    "mape": 8.8621,
+    "r2": 0.6775,
+    "training_time_s": 0.33,
+    "pred_time_ms": 5.09
+  },
+  {
+    "model": "random_forest",
+    "mae": 7.1809,
+    "rmse": 9.9726,
+    "mape": 8.8131,
+    "r2": 0.6423,
+    "training_time_s": 0.47,
+    "pred_time_ms": 80.19
+  }
+]
