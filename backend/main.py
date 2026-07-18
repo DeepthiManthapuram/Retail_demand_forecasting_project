@@ -129,12 +129,12 @@ def create_app() -> FastAPI:
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        "https://retail-demand-frontend.netlify.app/forecast",
+        "https://retail-demand-frontend.netlify.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-)
+    )
 
     # ---- Routers ----
     app.include_router(health.router,          tags=["Health"])
