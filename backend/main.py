@@ -12,7 +12,7 @@ On startup the app:
 
 All API routes are registered via routers mounted to this app.
 """
-
+from fastapi.middleware.cors import CORSMiddleware
 import sys
 import os
 from contextlib import asynccontextmanager
@@ -126,11 +126,13 @@ def create_app() -> FastAPI:
 
     # ---- CORS ----
     app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.cors_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
     )
 
     # ---- Routers ----
