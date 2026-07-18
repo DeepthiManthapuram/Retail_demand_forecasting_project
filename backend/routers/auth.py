@@ -178,34 +178,30 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
 # ---------------------------------------------------------------------------
 @router.post("/register", response_model=TokenResponse, summary="Register new user")
 def register(request: RegisterRequest, db: Session = Depends(get_db)):
-    """
-    Register a new user account.
+    try:
+        if db.query(User).filter(User.username == request.username).first():
+            raise HTTPException(status_code=400, detail="Username already registered.")
+        if db.query(User).filter(User.email == request.email).first():
+            raise HTTPException(status_code=400, detail="Email already registered.")
 
-    Args:
-        request: Registration details (username, email, password, role).
-        db:      Database session.
+        user = User(
+            username=request.username,
+            email=request.email,
+            hashed_password=_hash_password(request.password),
+            role=request.role,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
 
-    Returns:
-        JWT access token.
-    """
-    if db.query(User).filter(User.username == request.username).first():
-        raise HTTPException(status_code=400, detail="Username already registered.")
-    if db.query(User).filter(User.email == request.email).first():
-        raise HTTPException(status_code=400, detail="Email already registered.")
-
-    user = User(
-        username=request.username,
-        email=request.email,
-        hashed_password=_hash_password(request.password),
-        role=request.role,
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-
-    token = _create_token(user.username, user.role.value)
-    logger.info("New user registered: %s (%s)", user.username, user.role)
-    return TokenResponse(access_token=token, username=user.username, role=user.role.value)
+        token = _create_token(user.username, user.role.value)
+        logger.info("New user registered: %s (%s)", user.username, user.role)
+        return TokenResponse(access_token=token, username=user.username, role=user.role.value)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("Registration error: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Registration error: {type(exc).__name__} - {str(exc)}")
 
 
 @router.post("/login", response_model=TokenResponse, summary="Login and get JWT token")
@@ -213,28 +209,24 @@ def login(
     form: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ):
-    """
-    Authenticate with username and password; return a JWT access token.
+    try:
+        user = db.query(User).filter(User.username == form.username).first()
+        if user is None or not _verify_password(form.password, user.hashed_password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect username or password.",
+            )
 
-    Args:
-        form: OAuth2 form with username and password fields.
-        db:   Database session.
+        user.last_login = datetime.utcnow()
+        db.commit()
 
-    Returns:
-        JWT token response.
-    """
-    user = db.query(User).filter(User.username == form.username).first()
-    if user is None or not _verify_password(form.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password.",
-        )
-
-    user.last_login = datetime.utcnow()
-    db.commit()
-
-    token = _create_token(user.username, user.role.value)
-    return TokenResponse(access_token=token, username=user.username, role=user.role.value)
+        token = _create_token(user.username, user.role.value)
+        return TokenResponse(access_token=token, username=user.username, role=user.role.value)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("Login error: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Login error: {type(exc).__name__} - {str(exc)}")
 
 
 @router.get("/me", response_model=UserProfile, summary="Current user profile")
