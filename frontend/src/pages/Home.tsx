@@ -29,7 +29,7 @@ const BENEFITS = [
 
 export default function Home() {
   const navigate = useNavigate();
-  const { setHealth, token } = useAppStore();
+  const { setHealth } = useAppStore();
 
   useEffect(() => {
     getHealth().then(setHealth).catch(() => {});

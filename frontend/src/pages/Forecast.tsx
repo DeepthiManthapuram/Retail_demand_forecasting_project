@@ -62,6 +62,28 @@ export default function Forecast() {
         model: 'auto'
       });
       setResult(res);
+
+      // Save recent prediction locally for real-time dashboard updates
+      const localLog = {
+        store: form.store,
+        item: form.item,
+        model: res.model_used || 'auto',
+        horizon: form.horizon,
+        status: 'success',
+        created_at: new Date().toISOString()
+      };
+      const existingLogsRaw = localStorage.getItem('local_predictions');
+      const existingLogs = existingLogsRaw ? JSON.parse(existingLogsRaw) : [];
+      const isDuplicate = existingLogs.some((l: any) => 
+        l.store === localLog.store && 
+        l.item === localLog.item && 
+        l.horizon === localLog.horizon && 
+        (new Date().getTime() - new Date(l.created_at).getTime()) < 5000
+      );
+      if (!isDuplicate) {
+        existingLogs.unshift(localLog);
+        localStorage.setItem('local_predictions', JSON.stringify(existingLogs.slice(0, 20)));
+      }
     } catch (err: any) {
       const detail = err.response?.data?.detail || err.message || 'Prediction failed.';
       setError(detail);

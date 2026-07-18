@@ -44,12 +44,30 @@ export default function Dashboard() {
   const storeCounts = dashboardData?.store_forecast_counts ?? [];
   const itemCounts  = dashboardData?.item_forecast_counts  ?? [];
 
+  // Load local predictions from localStorage to bypass multi-instance ephemeral DB limitations
+  const localRaw = localStorage.getItem('local_predictions');
+  const localList = localRaw ? JSON.parse(localRaw) : [];
+
+  // Merge lists by prioritizing localList items, then adding backend items that don't match store + item + horizon of recent local runs
+  const mergedRecent = [...localList];
+  recent.forEach((r: any) => {
+    const isAlreadyListed = mergedRecent.some((l: any) => 
+      l.store === r.store && l.item === r.item && l.horizon === r.horizon
+    );
+    if (!isAlreadyListed) {
+      mergedRecent.push(r);
+    }
+  });
+
+  const displayRecent = mergedRecent.slice(0, 5);
+  const localCount = localList.length;
+
   const kpiCards = [
     { label:'Total Stores',       value: kpi?.total_stores  ?? 10,   icon: Store,     color:'#3b82f6' },
     { label:'Total Items',        value: kpi?.total_items   ?? 50,   icon: Package,   color:'#8b5cf6' },
     { label:'Time Series',        value: kpi?.total_series  ?? 500,  icon: TrendingUp,color:'#06b6d4' },
-    { label:'Forecasts Today',    value: kpi?.forecasts_today ?? 0,  icon: Zap,       color:'#10b981' },
-    { label:'Total Predictions',  value: kpi?.total_predictions ?? 0,icon: Activity,  color:'#f59e0b' },
+    { label:'Forecasts Today',    value: (kpi?.forecasts_today ?? 0) + localCount,  icon: Zap,       color:'#10b981' },
+    { label:'Total Predictions',  value: (kpi?.total_predictions ?? 0) + localCount,icon: Activity,  color:'#f59e0b' },
   ];
 
   return (
@@ -93,14 +111,14 @@ export default function Dashboard() {
         {/* ── Recent Activity ── */}
         <div className="glass-card" style={{ padding:'1.5rem', marginBottom:'2rem' }}>
           <h3 style={{ fontSize:'0.95rem', marginBottom:'1rem', color:'var(--color-text-muted)' }}>Recent Prediction Requests</h3>
-          {recent.length === 0
+          {displayRecent.length === 0
             ? <div style={{ textAlign:'center', padding:'2rem', color:'var(--color-text-faint)' }}>No predictions yet — try the Forecast page!</div>
             : (
               <div style={{ overflowX:'auto' }}>
                 <table className="data-table">
                   <thead><tr><th>Store Name</th><th>Product Name</th><th>Horizon</th><th>Status</th></tr></thead>
                   <tbody>
-                    {recent.map((r, i) => (
+                    {displayRecent.map((r, i) => (
                       <tr key={i}>
                         <td>{STORE_NAMES[r.store] || `Store ${r.store}`}</td>
                         <td>{ITEM_NAMES[r.item] || `Item ${r.item}`}</td>
