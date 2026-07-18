@@ -3,7 +3,6 @@ import Navbar           from './components/Navbar';
 import Home             from './pages/Home';
 import Forecast         from './pages/Forecast';
 import Dashboard        from './pages/Dashboard';
-import HistoryPage      from './pages/History';
 
 export default function App() {
   return (
@@ -15,7 +14,6 @@ export default function App() {
             <Route path="/"                 element={<Home />} />
             <Route path="/forecast"         element={<Forecast />} />
             <Route path="/dashboard"        element={<Dashboard />} />
-            <Route path="/history"          element={<HistoryPage />} />
             <Route path="*" element={
               <div style={{ textAlign:'center', padding:'8rem 1rem', color:'var(--color-text-muted)' }}>
                 <h2 style={{ fontSize:'3rem', marginBottom:'0.5rem' }}>404</h2>

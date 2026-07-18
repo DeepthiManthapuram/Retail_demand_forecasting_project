@@ -8,7 +8,6 @@ const allLinks = [
   { to: '/',            label: 'Home' },
   { to: '/forecast',    label: 'Forecast' },
   { to: '/dashboard',   label: 'Dashboard' },
-  { to: '/history',     label: 'History' },
 ];
 
 export default function Navbar() {
