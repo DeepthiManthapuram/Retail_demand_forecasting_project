@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "http://localhost:8000/api/$1" },
+    { "source": "/auth/(.*)", "destination": "http://localhost:8000/auth/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
