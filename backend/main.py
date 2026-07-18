@@ -69,19 +69,20 @@ async def lifespan(app: FastAPI):
     except Exception as exc:
         logger.warning("Seed step encountered an issue: %s", exc)
 
-    # ---- Generate synthetic dataset if missing ----
-    synthetic_path = settings.datasets_dir / "synthetic_train.csv"
-    kaggle_path    = settings.datasets_dir / "train.csv"
-    if not synthetic_path.exists() and not kaggle_path.exists():
-        try:
-            logger.info("No dataset found — generating synthetic dataset …")
-            from datasets.generate_dataset import main as gen_main
-            gen_main()
-            logger.info("✓ Synthetic dataset generated.")
-        except Exception as exc:
-            logger.error("Dataset generation failed: %s", exc)
+    # ---- Generate synthetic dataset if missing (local environment only) ----
+    if not os.environ.get("VERCEL") and not os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+        synthetic_path = settings.datasets_dir / "synthetic_train.csv"
+        kaggle_path    = settings.datasets_dir / "train.csv"
+        if not synthetic_path.exists() and not kaggle_path.exists():
+            try:
+                logger.info("No dataset found — generating synthetic dataset …")
+                from datasets.generate_dataset import main as gen_main
+                gen_main()
+                logger.info("✓ Synthetic dataset generated.")
+            except Exception as exc:
+                logger.error("Dataset generation failed: %s", exc)
     else:
-        logger.info("✓ Dataset found.")
+        logger.info("✓ Serverless environment — skipping disk dataset generation.")
 
     logger.info("✓ System ready — listening on %s:%d", settings.api_host, settings.api_port)
     yield
