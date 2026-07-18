@@ -1,5 +1,5 @@
 # ============================================================
-# requirements.txt — Ultra-lightweight for Vercel Serverless (under 100MB)
+# requirements.txt — Lightweight ML stack for Vercel Serverless
 # ============================================================
 
 fastapi==0.111.0
@@ -16,5 +16,10 @@ pydantic==2.7.1
 pydantic-settings==2.2.1
 email-validator==2.1.1
 
+pandas==2.2.2
 numpy==1.26.4
+scikit-learn==1.4.2
+xgboost==2.0.3
+lightgbm==4.3.0
+statsmodels==0.14.2
 reportlab==4.2.0
