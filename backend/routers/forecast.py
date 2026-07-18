@@ -158,11 +158,7 @@ def forecast_history(
         Product, Forecast.product_id == Product.id
     )
 
-    # Filter history strictly by the current user's user_id
-    if current_user is not None:
-        query = query.filter(Forecast.user_id == current_user.id)
-    else:
-        query = query.filter(Forecast.user_id == None)
+    # Show all history to all users in non-auth mode
 
     if store is not None:
         query = query.filter(Store.store_code == store)
