@@ -131,7 +131,7 @@ def create_app() -> FastAPI:
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
-)
+    )
 
     # ---- Routers ----
     app.include_router(health.router,          tags=["Health"])
