@@ -6,8 +6,8 @@ import type {
   HealthResponse, ForecastHistoryItem, TrainRequest, TrainResponse,
 } from '../types';
 
-/** Base URL — change to your deployed backend in production */
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+/** Base URL — relative path in production or custom VITE_API_URL */
+const BASE_URL = import.meta.env.VITE_API_URL || '';
 
 /** Axios instance with base URL and default headers */
 const api = axios.create({
