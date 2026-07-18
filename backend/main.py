@@ -28,7 +28,7 @@ sys.path.insert(0, str(_ROOT))
 from config.settings import get_settings
 from config.logging_config import setup_logging, get_logger
 from database.connection import create_all_tables
-from backend.routers import health, forecast, dataset, training, dashboard, models_router, auth, reports
+from backend.routers import health, forecast, dataset, training, dashboard, models_router, reports
 
 # ---------------------------------------------------------------------------
 # Lifespan: startup and shutdown logic
@@ -125,7 +125,6 @@ def create_app() -> FastAPI:
 
     # ---- Routers ----
     app.include_router(health.router,          tags=["Health"])
-    app.include_router(auth.router,            prefix="/auth",       tags=["Authentication"])
     app.include_router(forecast.router,        prefix="/api",        tags=["Forecast"])
     app.include_router(dataset.router,         prefix="/api",        tags=["Dataset"])
     app.include_router(training.router,        prefix="/api",        tags=["Training"])
