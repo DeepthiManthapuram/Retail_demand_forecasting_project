@@ -147,9 +147,9 @@ The application is architected to run in a decoupled production environment:
 *   **URL**: `https://retaildemandforecastingproject-production.up.railway.app`
 *   Deployed with SQLite master database seeds, full ML stack support, and on-demand model fitting.
 
-### Frontend (Vercel)
-*   **URL**: `https://retail-demand-forecasting-project-x.vercel.app`
-*   Deployed as a lightweight static web app. The `/api/*`, `/auth/*`, and `/health` requests are proxied directly to the Railway backend URL via the `vercel.json` routing configuration:
+### Frontend (netlify)
+*   **URL**: `https://retail-demand-frontend.netlify.app/`
+*   Deployed as a lightweight static web app.
 
 ```json
 {
@@ -220,7 +220,7 @@ The application is architected to run in a decoupled production environment:
 ## 👩‍💻 Author
 
 **Deepthi Manthapuram**
-*   GitHub: [@DeepthiManthapuram](https://github.com/DeepthiManthapuram)
+*   GitHub: [@DeepthiManthapuram](https://github.com/DeepthiManthapuram/Retail_demand_forecasting_project.git)
 
 ---
 
